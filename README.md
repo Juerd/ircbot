@@ -25,4 +25,9 @@ cx=
 [ns]
 username=
 password=
+
+[tkkrlab]
+status_file=
+quote_file=
+led_url=$message={0}
 </pre>
