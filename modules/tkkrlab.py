@@ -10,10 +10,19 @@ import time
 import random
 import os.path
 
+import os, signal, fcntl
+
 class tkkrlab( _module ):
-	def __init__( self, config ):
-		_module.__init__( self, config )
+	def __init__( self, config, bot ):
+		_module.__init__( self, config, bot )
 		self.space_open = None
+		try:
+			signal.signal( signal.SIGIO, self.sigio_handler )
+			self.fd = os.open( os.path.dirname( os.path.realpath( self.status_file ) ), os.O_RDONLY )
+			fcntl.fcntl( self.fd, fcntl.F_SETSIG, 0 )
+			fcntl.fcntl( self.fd, fcntl.F_NOTIFY, fcntl.DN_MODIFY | fcntl.DN_CREATE | fcntl.DN_MULTISHOT )
+		except Exception, e:
+			print( 'Failed to add signal: {0}'.format( e ) )
 
 	def can_handle( self, cmd, admin ):
 		return cmd in ( 'status', 'led', 'time', 'quote', 'help' )
@@ -56,7 +65,7 @@ class tkkrlab( _module ):
 
 				if self.space_open != ( space_opened == '1' ):
 					self.space_open = space_opened == '1'
-					self.__set_topic( bot, '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
+					self.__set_topic( '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
 			space_date = os.path.getmtime( self.status_file )
 			return ( self.space_open, space_date )
 		except AttributeError:
@@ -65,9 +74,9 @@ class tkkrlab( _module ):
 			self.space_open = 'No status file found'
 		return ( self.space_open, None )
 
-	def __set_topic( self, bot, channel, new_topic ):
-		bot.connection.topic( channel, new_topic )
-		bot.privmsg( channel, new_topic )
+	def __set_topic( self, channel, new_topic ):
+		self.bot.connection.topic( channel, new_topic )
+		self.bot.privmsg( channel, new_topic )
 
 	def __send_led( self, message):
 		"""Send a command to the led board"""
@@ -97,3 +106,6 @@ class tkkrlab( _module ):
 		except IOError:
 			return 'Error: quote file not found'
 
+	def sigio_handler( self, signum, frame ):
+		print( 'sigio!' )
+		self.__get_space_status()
