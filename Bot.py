@@ -86,6 +86,11 @@ class Bot( SingleServerIRCBot ):
 
 	def on_welcome( self, c, e ):
 		print( "on_welcome" )
+		try:
+			nickserv_passwd = self.config.get( 'nickserv', 'passwd' )
+			c.privmsg( 'NickServ', 'IDENTIFY {0}'.format( nickserv_passwd ) )
+		except:
+			pass
 		c.join( self.channel )
 
 #	def on_join( self, c, e ):
