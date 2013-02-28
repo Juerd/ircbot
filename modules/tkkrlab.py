@@ -25,7 +25,7 @@ class tkkrlab( _module ):
 				'!quote: to get a random quote',
 				'!status: to get open/close status of the space',
 				'!led message: put message on led matrix board',
-				#'!time: put current time on led matrix board',
+				'!time: put current time on led matrix board',
 				'!help: this message',
 				'See also my friends Lock-O-Matic and arcade 1943 (if he is around)',
 			]:
@@ -56,7 +56,7 @@ class tkkrlab( _module ):
 
 				if self.space_open != ( space_opened == '1' ):
 					self.space_open = space_opened == '1'
-					#self.__set_topic( bot, '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
+					self.__set_topic( bot, '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
 			space_date = os.path.getmtime( self.status_file )
 			return ( self.space_open, space_date )
 		except AttributeError:
