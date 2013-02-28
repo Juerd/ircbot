@@ -35,8 +35,6 @@ class tkkrlab( _module ):
 				'!status: to get open/close status of the space',
 				'!led message: put message on led matrix board',
 				'!time: put current time on led matrix board',
-				'!help: this message',
-				'See also my friends Lock-O-Matic and arcade 1943 (if he is around)',
 			]:
 				bot.privmsg( target, line )
 		elif cmd == 'quote':
