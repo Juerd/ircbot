@@ -25,7 +25,7 @@ class tkkrlab( _module ):
 			print( 'Failed to add signal: {0}'.format( e ) )
 
 	def can_handle( self, cmd, admin ):
-		return cmd in ( 'status', 'led', 'time', 'quote', 'help' )
+		return cmd in ( 'status', 'led', 'time', 'quote' )
 
 	def handle( self, bot, cmd, args, source, target, admin ):
 		( local_status, status_date ) = self.__get_space_status()
@@ -73,7 +73,7 @@ class tkkrlab( _module ):
 		return ( self.space_open, None )
 
 	def __set_topic( self, channel, new_topic ):
-		self.bot.connection.topic( channel, new_topic )
+		self.bot.connection.topic( channel, new_topic + ' | See our activities on http://bit.ly/AsJMNc' )
 		self.bot.privmsg( channel, new_topic )
 
 	def __send_led( self, message):
