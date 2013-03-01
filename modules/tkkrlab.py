@@ -25,10 +25,14 @@ class tkkrlab( _module ):
 			print( 'Failed to add signal: {0}'.format( e ) )
 
 	def can_handle( self, cmd, admin ):
-		return cmd in ( 'status', 'led', 'time', 'quote' )
+		return cmd in ( 'status', 'led', 'time', 'quote' ) or admin and cmd in ( 'force_topic_update' )
 
 	def handle( self, bot, cmd, args, source, target, admin ):
 		( local_status, status_date ) = self.__get_space_status()
+		if admin:
+			if cmd == 'force_topic_update':
+				self.__set_topic( '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
+				return
 		if cmd == 'help':
 			for line in [
 				'!quote: to get a random quote',
