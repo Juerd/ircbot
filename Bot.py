@@ -54,7 +54,17 @@ class Bot( SingleServerIRCBot ):
 			except socket.timeout:
 				print( 'Socket timeout' )
 				return False
-
+	
+	def die(self):
+		if self.modules:
+			for module in self.modules:
+				try:
+					self.modules[module].stop()
+				except Exception, e:
+					print( 'Failed to stop module {0}: {1}'.format( module, e ) )
+			del self.modules
+		SingleServerIRCBot.die(self)
+		
 	def __reload_config( self ):
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
 		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
