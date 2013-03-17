@@ -12,8 +12,6 @@ import os.path
 
 import threading, socket, select
 
-import os, signal, fcntl
-
 class StatusMonitor(threading.Thread):
 	def __init__( self, module ):
 		super(StatusMonitor,self).__init__()
@@ -152,6 +150,3 @@ class tkkrlab( _module ):
 		except IOError:
 			return 'Error: quote file not found'
 
-	def sigio_handler( self, signum, frame ):
-		print( 'sigio!' )
-		self.__get_space_status()
