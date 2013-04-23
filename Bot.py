@@ -1,8 +1,15 @@
 from __future__ import print_function
 import ConfigParser, sys, os, signal, subprocess
+import datetime,time
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_uh, is_channel
+import socket
 import modules
+
+def print( *args ):
+	sys.stdout.write( datetime.datetime.now().strftime( '[%H:%M:%S.%f] ' ) )
+	sys.stdout.write( *args )
+	sys.stdout.write( '\n' )
 
 class Bot( SingleServerIRCBot ):
 	"""The main brain of the IRC bot."""
@@ -44,16 +51,21 @@ class Bot( SingleServerIRCBot ):
 	#override
 	def start( self ):
 		self._connect()
+		
 		if not self.connection.connected:
 			print( 'Failed to connect' )
 			return False
-		import socket
+		
+		self.last_ping = None
+		self.ping_timeout = 3 * 60 # 3 minutes
 		while self.connection.connected:
 			try:
 				self.connection.process_data()
 			except socket.timeout:
 				print( 'Socket timeout' )
 				return False
+			except Exception, e:
+				print( 'Exception: {0}'.format( e ) )
 	
 	def die(self):
 		if self.modules:
@@ -64,7 +76,7 @@ class Bot( SingleServerIRCBot ):
 					print( 'Failed to stop module {0}: {1}'.format( module, e ) )
 			del self.modules
 		SingleServerIRCBot.die(self)
-		
+	
 	def __reload_config( self ):
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
 		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
@@ -153,10 +165,14 @@ class Bot( SingleServerIRCBot ):
 		print( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( source, target, cmd, args, admin ) )
 
 		# handle die outside of module (in case module is dead :( )
-		if admin and cmd == 'die':
-			self.notice( source, 'Goodbye cruel world!' )
-			self.die()
-			return
+		if admin:
+			if cmd == 'die':
+				self.notice( source, 'Goodbye cruel world!' )
+				self.die()
+				return
+			elif cmd == 'raw':
+				self.connection.send_raw( ' '.join( args ) )
+				return
 			
 		if cmd == 'help':
 			self.privmsg( target, '!help: this help text' )
