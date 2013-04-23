@@ -33,7 +33,7 @@ class StatusMonitor(threading.Thread):
 						self.module.set_space_status( data )
 					except Exception, e:
 						print( 'Failed to update status: {0}'.format( e ) )
-			
+		self.socket.close()	
 
 class tkkrlab( _module ):
 	def __init__( self, config, bot ):
