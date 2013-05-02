@@ -18,6 +18,8 @@ class Bot( SingleServerIRCBot ):
 		self.config = ConfigParser.SafeConfigParser()
 		self.__reload_config()
 
+		self.ops = {}
+		
 		s = self.config.get( "main", "server" ).split( ":", 1 )
 		server = s[0]
 		if len(s) == 2:
@@ -48,7 +50,7 @@ class Bot( SingleServerIRCBot ):
 		#for module in modules.getmodules():
 	#		self.bot.add_module( modules.getmodule( module )( config.items( module ) ) )
 		signal.signal( signal.SIGINT, self.sigint_handler )
-
+		
 	#override
 	def start( self ):
 		self._connect()
@@ -67,6 +69,24 @@ class Bot( SingleServerIRCBot ):
 				return False
 			except Exception as e:
 				print( 'Exception: {0}'.format( e ) )
+			
+#	def on_all_raw_messages( self, c, e ):
+#		print( '{0}: {1}'.format( e.eventtype(), e.arguments() ) )
+		
+	def on_join( self, c, e ):
+#		print( "on_join: (t: {0}, s: {1})".format( e.target(), e.source() ) )
+		self.connection.names( [e.target()] )
+
+	def on_mode( self, c, e ):
+#		print( 'on_mode: {0}, {1}: {2}'.format( e.target(), e.source(), e.arguments() ) )
+		self.connection.names( [e.target()] )
+
+	def on_namreply( self, c, e ):
+#		print( 'on_namreply: {0}'.format( e.arguments() ) )
+		chan = e.arguments()[1]
+		people = e.arguments()[2].split( ' ' )
+		ops = map( lambda p: p[1:], filter( lambda p: p[0] == '@', people ) )
+		self.ops[ chan ] = ops
 	
 	def die(self):
 		if self.modules:
@@ -136,8 +156,6 @@ class Bot( SingleServerIRCBot ):
 			pass
 		c.join( self.channel )
 
-#	def on_join( self, c, e ):
-#		print( "on_join {0}, {1}".format( e.target(), e.source() ) )
 
 #	def on_disconnect( self, c, e ):
 #		print( "on_disconnect" )
@@ -161,6 +179,9 @@ class Bot( SingleServerIRCBot ):
 		cmd = args.pop(0).strip()
 		# test for admin
 		admin = nm_to_uh( e.source() ) in self.admin
+		if not admin:
+			if e.target() in self.ops and nm_to_n( e.source() ) in self.ops[ e.target() ]:
+				admin = True
 
 		# nick is the sender of the message, target is either a channel or the sender.
 		source = nm_to_n( e.source() )
@@ -180,7 +201,14 @@ class Bot( SingleServerIRCBot ):
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
 				return
-			
+		
+		if cmd == 'admins':
+			self.notice( source, 'Current operators:' )
+			self.notice( source, ' - global: {0}'.format( ' '.join( self.admin ) ) )
+			for chan in self.ops:
+				self.notice( source, ' - {0}: {1}'.format( chan, ' '.join( self.ops[ chan ] ) ) )
+			return
+		
 		if cmd == 'help':
 			self.privmsg( target, '!help: this help text' )
 
