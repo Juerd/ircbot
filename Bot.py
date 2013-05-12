@@ -211,6 +211,9 @@ class Bot( SingleServerIRCBot ):
 				return
 			elif cmd == 'restart_class':
 				raise BotReloadException
+			elif cmd == 'nickserv':
+				self.do_nickserv_auth( c, e )
+				return
 			elif cmd == 'reload_module' and len( args ) > 0:
 				for m in args:
 					if m in self.modules:
@@ -218,12 +221,14 @@ class Bot( SingleServerIRCBot ):
 							self.__add_module( m, True )
 						except Exception as e:
 							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
+				return
 			elif cmd == 'available_modules':
 				a_m = []
 				for module in modules.getmodules():
 					if not module in self.modules:
 						a_m.append( module )
 				self.notice( source, 'Available modules: ' + ', '.join( a_m ) )
+				return
 			elif cmd == 'enable_module' and len( args ) > 0:
 				for m in args:
 					if not m in self.modules:
@@ -231,6 +236,7 @@ class Bot( SingleServerIRCBot ):
 							self.__add_module( m, True )
 						except Exception as e:
 							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
+				return
 			elif cmd == 'disable_module' and len( args ) > 0:
 				for m in args:
 					if m in self.modules:
@@ -239,6 +245,7 @@ class Bot( SingleServerIRCBot ):
 						except:
 							pass
 						del self.modules[ m ]
+				return
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
 				return
