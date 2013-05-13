@@ -57,32 +57,31 @@ class tkkrlab( _module ):
 		( local_status, status_date ) = self.__get_space_status()
 		if admin:
 			if cmd == 'admin_help':
-				self.notice( source, '!force_topic_update: force a topic update' )
+				bot.notice( source, '!force_topic_update: force a topic update' )
 			elif cmd == 'force_topic_update':
 				self.__set_topic( '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
 				return
 		if cmd == 'help':
-			for line in [
+			return [
 				'!quote: to get a random quote',
 				'!status: to get open/close status of the space',
 				'!led message: put message on led matrix board',
 				'!time: put current time on led matrix board',
-			]:
-				bot.privmsg( target, line )
+			]
 		elif cmd == 'quote':
-			bot.privmsg( target, 'Quote: ' + self.__random_quote() )
+			return [ 'Quote: ' + self.__random_quote() ]
 		elif cmd == 'status':
 			if local_status not in ( True, False ):
-				bot.privmsg( target, 'Error: {0}'.format( local_status ) )
+				return [ 'Error: {0}'.format( local_status ) ]
 			else:
-				bot.privmsg( target, 'We are {0} since {1}'.format( 'Open' if local_status == True else 'Closed', datetime.datetime.fromtimestamp( status_date, tzlocal() ).strftime( '%a, %d %b %Y %H:%M:%S %Z' ) ) )
+				return [ 'We are {0} since {1}'.format( 'Open' if local_status == True else 'Closed', datetime.datetime.fromtimestamp( status_date, tzlocal() ).strftime( '%a, %d %b %Y %H:%M:%S %Z' ) ) ]
 		elif cmd == 'led':
 			if local_status == True:
-				bot.privmsg( target, 'Led: {0}'.format( self.__send_led( ' '.join( args ) ) ) )
+				return [ 'Led: {0}'.format( self.__send_led( ' '.join( args ) ) ) ]
 			elif local_status == False:
-				bot.privmsg( target, 'Sorry ' + source + ', can only do this when space is open.' )
+				return [ 'Sorry ' + source + ', can only do this when space is open.' ]
 			else:
-				bot.privmsg( target, 'Error: ' + local_status )
+				return [ 'Error: ' + local_status ]
 		elif cmd == 'time':
 			self.__send_led( time.strftime( '%H:%M' ).center( 16 ) )
 
