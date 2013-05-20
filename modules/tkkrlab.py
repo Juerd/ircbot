@@ -23,15 +23,15 @@ class StatusMonitor(threading.Thread):
 		
 	def run(self):
 		self.socket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-		self.socket.bind( ('', 55055) )
+		self.socket.bind( ( '', 8888 ) )
 		while not self._stop.isSet():
-			(r,w,x) = select.select([self.socket],[],[], 0.5)
+			(r,w,x) = select.select( [self.socket],[],[], 0.5 )
 			if len( r ) > 0:
 				data = r[0].recv(1)
 				if data in ( '0','1' ):
 					try:
-						self.module.set_space_status( data )
-					except Exception, e:
+						self.module.set_space_status( data, time.time() )
+					except Exception as e:
 						print( 'Failed to update status: {0}'.format( e ) )
 		self.socket.close()	
 
@@ -85,39 +85,17 @@ class tkkrlab( _module ):
 		elif cmd == 'time':
 			self.__send_led( time.strftime( '%H:%M' ).center( 16 ) )
 
-	def set_space_status( self, status ):
-		try:
-			if self.space_open == None:
-				self.space_open = status == '1'
-
-			if self.space_open != ( status == '1' ):
-				self.space_open = status == '1'
-				self.__set_topic( '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
-			space_date = os.path.getmtime( self.status_file )
-			return ( self.space_open, space_date )
-		except AttributeError:
-			self.space_open = 'No status file configured'
-		except IOError:
-			self.space_open = 'No status file found'
-		return ( self.space_open, None )
+	def set_space_status( self, status, aTime ):
+		if self.space_open == None:
+			self.space_open = status == '1'
+		if self.space_open != ( status == '1' ):
+			self.space_open = status == '1'
+			self.__set_topic( '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
+		self.space_status = ( self.space_open, aTime )
+		return self.space_status
 		
 	def __get_space_status( self ):
-		try:
-			with open( self.status_file ) as fd:
-				space_opened = fd.readline().strip()
-				if self.space_open == None:
-					self.space_open = space_opened == '1'
-
-				if self.space_open != ( space_opened == '1' ):
-					self.space_open = space_opened == '1'
-					self.__set_topic( '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
-			space_date = os.path.getmtime( self.status_file )
-			return ( self.space_open, space_date )
-		except AttributeError:
-			self.space_open = 'No status file configured'
-		except IOError:
-			self.space_open = 'No status file found'
-		return ( self.space_open, None )
+		return self.space_status
 
 	def __set_topic( self, channel, new_topic ):
 		self.bot.connection.topic( channel, new_topic + ' | See our activities on http://bit.ly/AsJMNc' )
