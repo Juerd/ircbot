@@ -72,7 +72,7 @@ class tkkrlab( _module ):
 			return [ 'Quote: ' + self.__random_quote() ]
 		elif cmd == 'status':
 			if local_status not in ( True, False ):
-				return [ 'Error: {0}'.format( local_status ) ]
+				return [ 'Error: status is not True/False but {0}'.format( local_status ) ]
 			else:
 				return [ 'We are {0} since {1}'.format( 'Open' if local_status == True else 'Closed', datetime.datetime.fromtimestamp( status_date, tzlocal() ).strftime( '%a, %d %b %Y %H:%M:%S %Z' ) ) ]
 		elif cmd == 'led':
