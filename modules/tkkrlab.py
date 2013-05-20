@@ -51,13 +51,18 @@ class tkkrlab( _module ):
 		self.thread.join()
 
 	def can_handle( self, cmd, admin ):
-		return cmd in ( 'status', 'led', 'time', 'quote' ) or admin and cmd in ( 'admin_help', 'force_topic_update' )
+		return cmd in ( 'status', 'led', 'time', 'quote' ) or admin and cmd in ( 'admin_help', 'force_status', 'force_topic_update' )
 
 	def handle( self, bot, cmd, args, source, target, admin ):
 		( local_status, status_date ) = self.__get_space_status()
 		if admin:
 			if cmd == 'admin_help':
+				bot.notice( source, '!force_status <status>: force a status update' )
 				bot.notice( source, '!force_topic_update: force a topic update' )
+			elif cmd == 'force_status':
+				if len( args ) == 0: return
+				if args[0] in ( '0', '1' ):
+					self.set_space_status( args[0], time.time() )
 			elif cmd == 'force_topic_update':
 				self.__set_topic( '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
 				return
