@@ -12,20 +12,20 @@ import os.path
 
 import threading, socket, select
 
-class StatusMonitor(threading.Thread):
+class StatusMonitor( threading.Thread ):
 	def __init__( self, module ):
-		super(StatusMonitor,self).__init__()
+		super( StatusMonitor, self ).__init__()
 		self._stop = threading.Event()
 		self.module = module
 		
-	def stop(self):
+	def stop( self ):
 		self._stop.set()
 		
-	def run(self):
+	def run( self ):
 		self.socket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 		self.socket.bind( ( '', 8888 ) )
 		while not self._stop.isSet():
-			(r,w,x) = select.select( [self.socket],[],[], 0.5 )
+			( r, w ,x ) = select.select( [self.socket],[],[], 0.5 )
 			if len( r ) > 0:
 				data = r[0].recv(1)
 				if data in ( '0','1' ):
@@ -38,12 +38,12 @@ class StatusMonitor(threading.Thread):
 class tkkrlab( _module ):
 	def __init__( self, config, bot ):
 		_module.__init__( self, config, bot )
-		self.space_open = None
 		self.space_open_data = None
+		self.space_status = ( None, None )
 		try:
-			self.thread = StatusMonitor(self)
+			self.thread = StatusMonitor( self )
 			self.thread.start()
-		except Exception, e:
+		except Exception as e:
 			print( 'Thread exception: {0}'.format( e ) )
 	
 	def stop(self):
@@ -86,12 +86,13 @@ class tkkrlab( _module ):
 			self.__send_led( time.strftime( '%H:%M' ).center( 16 ) )
 
 	def set_space_status( self, status, aTime ):
-		if self.space_open == None:
-			self.space_open = status == '1'
-		if self.space_open != ( status == '1' ):
-			self.space_open = status == '1'
-			self.__set_topic( '#tkkrlab', 'We zijn Open' if self.space_open else 'We zijn Dicht' )
-		self.space_status = ( self.space_open, aTime )
+		( space_open, space_time ) = self.space_status
+		if space_open == None:
+			space_open = status == '1'
+		if space_open != ( status == '1' ):
+			space_open = status == '1'
+			self.__set_topic( '#tkkrlab', 'We zijn Open' if space_open else 'We zijn Dicht' )
+		self.space_status = ( space_open, aTime )
 		return self.space_status
 		
 	def __get_space_status( self ):
@@ -114,7 +115,7 @@ class tkkrlab( _module ):
 				return 'Error:' + res + ' - ' + response.reason
 			else:
 				return 'OK'
-		except IOError, e:
+		except IOError as e:
 			return 'Cannot connect to LED server: "{0}"'.format( e )
 		except AttributeError:
 			return 'LED URL not set'
