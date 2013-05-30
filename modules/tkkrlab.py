@@ -23,7 +23,7 @@ class StatusMonitor(threading.Thread):
 		
 	def run(self):
 		self.socket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-		self.socket.bind( ('', 55055) )
+		self.socket.bind( ('', 8889) )
 		while not self._stop.isSet():
 			(r,w,x) = select.select([self.socket],[],[], 0.5)
 			if len( r ) > 0:
