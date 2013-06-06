@@ -119,8 +119,8 @@ class tkkrlab( _module ):
 		return self.space_status
 
 	def __set_topic( self, channel, new_topic ):
-		self.bot.connection.topic( channel, new_topic + ' | See our activities on http://bit.ly/AsJMNc' )
-		self.bot.privmsg( channel, new_topic )
+		self.mgr.bot.connection.topic( channel, new_topic + ' | See our activities on http://bit.ly/AsJMNc' )
+		self.privmsg( channel, new_topic )
 
 	def __send_led( self, message):
 		"""Send a command to the led board"""
