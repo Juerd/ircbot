@@ -89,7 +89,7 @@ class tkkrlab( _module ):
 	
 	def cmd_led( self, args, source, target, admin ):
 		"""!led <message>: put message on led matrix board"""
-		( local_status, status_date ) = self.__get_space_status()
+		( local_status, ) = self.__get_space_status()
 		if local_status == True:
 			return [ 'Led: {0}'.format( self.__send_led( ' '.join( args ) ) ) ]
 		elif local_status == False:
@@ -99,7 +99,7 @@ class tkkrlab( _module ):
 		
 	def cmd_time( self, args, source, target, admin ):
 		"""!time: put current time on led matrix board"""
-		( local_status, status_date ) = self.__get_space_status()
+		( local_status, ) = self.__get_space_status()
 		if local_status == True:
 			self.__send_led( time.strftime( '%H:%M' ).center( 16 ) )
 
