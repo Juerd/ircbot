@@ -40,8 +40,18 @@ class tkkrlab( _module ):
 	def __init__( self, mgr ):
 		_module.__init__( self, mgr )
 			
-		self.space_open_data = None
-		self.space_status = ( None, None )
+		cfg_state = None
+		cfg_time = None
+		try:
+			cfg_state = self.get_config( 'space_state' )
+		except:
+			pass
+		try:
+			cfg_time = float( self.get_config( 'space_state_time' ) )
+		except:
+			pass
+		
+		self.space_status = ( cfg_state, cfg_time )
 		try:
 			self.thread = StatusMonitor( self )
 			self.thread.start()
@@ -101,6 +111,8 @@ class tkkrlab( _module ):
 			space_open = status == '1'
 			self.__set_topic( '#tkkrlab', 'We zijn Open' if space_open else 'We zijn Dicht' )
 		self.space_status = ( space_open, aTime )
+		self.set_config( 'space_state', space_open )
+		self.set_config( 'space_state_time', aTime )
 		return self.space_status
 		
 	def __get_space_status( self ):
