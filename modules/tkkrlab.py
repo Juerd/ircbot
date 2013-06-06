@@ -36,8 +36,10 @@ class StatusMonitor( threading.Thread ):
 		self.socket.close()	
 
 class tkkrlab( _module ):
+	"""Bot module to do tkkrlab things"""
 	def __init__( self, mgr ):
 		_module.__init__( self, mgr )
+			
 		self.space_open_data = None
 		self.space_status = ( None, None )
 		try:
@@ -111,7 +113,7 @@ class tkkrlab( _module ):
 	def __send_led( self, message):
 		"""Send a command to the led board"""
 		try:
-			url = urlparse.urlparse( self.led_url.format( urllib.quote( message[:85] ) ) )
+			url = urlparse.urlparse( self.get_config( 'led_url' ).format( urllib.quote( message[:85] ) ) )
 			conn = httplib.HTTPConnection( url.netloc, timeout=10 )
 			conn.request( 'GET', url.path )
 			response = conn.getresponse()
@@ -123,16 +125,16 @@ class tkkrlab( _module ):
 				return 'OK'
 		except IOError as e:
 			return 'Cannot connect to LED server: "{0}"'.format( e )
-		except AttributeError:
-			return 'LED URL not set'
+		except:
+			return 'Error: LED URL not set'
 
 	def __random_quote( self ):
 		"""Read a quote from a text file"""
 		try:
-			with open( self.quote_file ) as fd:
+			with open( self.get_config( 'quote_file' ) ) as fd:
 				return random.choice( fd.readlines() )
-		except AttributeError:
-			return 'Error: no quote file defined'
 		except IOError:
 			return 'Error: quote file not found'
+		except:
+			return 'Error: no quote file defined'
 
