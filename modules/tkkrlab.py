@@ -43,7 +43,7 @@ class tkkrlab( _module ):
 		cfg_state = None
 		cfg_time = None
 		try:
-			cfg_state = self.get_config( 'space_state' )
+			cfg_state = self.get_config( 'space_state' ) == '1'
 		except:
 			pass
 		try:
