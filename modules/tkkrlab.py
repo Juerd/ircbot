@@ -72,8 +72,8 @@ class tkkrlab( _module ):
 	def admin_cmd_force_topic_update( self, args, source, target, admin ):
 		"""!force_topic_update: force topic update"""
 		if not admin: return
-		( local_status, ) = self.__get_space_status()
-		self.__set_topic( '#tkkrlab', 'We zijn Open' if local_status else 'We zijn Dicht' )
+		( space_open, space_time ) = self.__get_space_status()
+		self.__set_topic( '#tkkrlab', 'We zijn Open' if space_open else 'We zijn Dicht' )
 		
 	def cmd_quote( self, args, source, target, admin ):
 		"""!quote: to get a random quote"""
@@ -81,26 +81,26 @@ class tkkrlab( _module ):
 		
 	def cmd_status( self, args, source, target, admin ):
 		"""!status: to get open/close status of the space"""
-		( local_status, status_date ) = self.__get_space_status()
-		if local_status not in ( True, False ):
-			return [ 'Error: status is not True/False but {0}'.format( local_status ) ]
+		( space_open, space_time ) = self.__get_space_status()
+		if space_open not in ( True, False ):
+			return [ 'Error: status is not True/False but {0}'.format( space_open ) ]
 		else:
-			return [ 'We are {0} since {1}'.format( 'Open' if local_status == True else 'Closed', datetime.datetime.fromtimestamp( status_date, tzlocal() ).strftime( '%a, %d %b %Y %H:%M:%S %Z' ) ) ]
+			return [ 'We are {0} since {1}'.format( 'Open' if space_open == True else 'Closed', datetime.datetime.fromtimestamp( space_time, tzlocal() ).strftime( '%a, %d %b %Y %H:%M:%S %Z' ) ) ]
 	
 	def cmd_led( self, args, source, target, admin ):
 		"""!led <message>: put message on led matrix board"""
-		( local_status, ) = self.__get_space_status()
-		if local_status == True:
+		( space_open, space_time ) = self.__get_space_status()
+		if space_open == True:
 			return [ 'Led: {0}'.format( self.__send_led( ' '.join( args ) ) ) ]
-		elif local_status == False:
+		elif space_open == False:
 			return [ 'Sorry ' + source + ', can only do this when space is open.' ]
 		else:
-			return [ 'Error: status is not True/False but {0}'.format( local_status ) ]
+			return [ 'Error: status is not True/False but {0}'.format( space_open ) ]
 		
 	def cmd_time( self, args, source, target, admin ):
 		"""!time: put current time on led matrix board"""
-		( local_status, ) = self.__get_space_status()
-		if local_status == True:
+		( space_open, space_time ) = self.__get_space_status()
+		if space_open == True:
 			self.__send_led( time.strftime( '%H:%M' ).center( 16 ) )
 
 	def set_space_status( self, status, aTime ):
