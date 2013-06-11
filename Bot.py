@@ -80,7 +80,7 @@ class Bot( SingleServerIRCBot ):
 			try:
 				self.connection.process_data()
 			except socket.timeout:
-				logging.debug( 'Socket timeout' )
+				logging.warning( 'Socket timeout' )
 				return False
 			except BotReloadException as e:
 				self.connection.disconnect( "Reloading bot..." )
@@ -167,13 +167,28 @@ class Bot( SingleServerIRCBot ):
 				self.do_nickserv_auth( c, e )
 				return
 			# config commands
-			elif cmd == 'get_config' and len( args ) == 2:
-				try:
-					value = self.get_config( args[0], args[1] )
-					self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
-				except:
-					self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
-			elif cmd == 'set_config':
+			elif cmd == 'get_config' and len( args ) <= 2:
+				if len( args ) == 2:
+					try:
+						value = self.get_config( args[0], args[1] )
+						self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
+					except:
+						self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
+				elif len( args ) == 1:
+					try:
+						values = self.get_config( args[0] )
+						if len( values ) > 0:
+							self.notice( source, 'config[{}]: '.format( args[0] ) + ', '.join( [ '{}: "{}"'.format( k,v ) for ( k, v ) in values.iteritems() ] ) )
+						else:
+							self.notice( source, 'config[{}] is empty'.format( args[0] ) )
+					except:
+						self.notice( source, 'config[{}] not set'.format( args[0] ) )
+				else:
+					try:
+						self.notice( source, 'config groups: ' + ', '.join( self.get_config_groups() ) )
+					except Exception as e:
+						self.notice( source, 'No config groups: {}'.format( e ) )
+			elif cmd == 'set_config' and len( args ) >= 2:
 				if len( args ) >= 3:
 					config_val = ' '.join( args[2:] )
 				else:
@@ -305,6 +320,10 @@ class Bot( SingleServerIRCBot ):
 			c.privmsg( 'NickServ', 'IDENTIFY {0}'.format( nickserv_passwd ) )
 		except:
 			pass
+
+	def get_config_groups( self ):
+		resultset = self.db.execute( 'select distinct `group` from config' )
+		return [ g for ( g, ) in resultset.fetchall() ]
 
 	def get_config( self, group, key = None, default = None ):
 		"""gets a config value"""
