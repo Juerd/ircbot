@@ -84,9 +84,9 @@ class tkkrlab( _module ):
 		( space_open, space_time ) = self.__get_space_status()
 		self.__set_topic( '#tkkrlab', 'We zijn Open' if space_open else 'We zijn Dicht' )
 		
-	def cmd_quote( self, args, source, target, admin ):
-		"""!quote: to get a random quote"""
-		return [ 'Quote: ' + self.__random_quote() ]
+#	def cmd_quote( self, args, source, target, admin ):
+#		"""!quote: to get a random quote"""
+#		return [ 'Quote: ' + self.__random_quote() ]
 		
 	def cmd_status( self, args, source, target, admin ):
 		"""!status: to get open/close status of the space"""
