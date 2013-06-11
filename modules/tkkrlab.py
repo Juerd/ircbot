@@ -25,18 +25,24 @@ class StatusMonitor( threading.Thread ):
 		self._stop_event.set()
 		
 	def run( self ):
+		logging.debug( 'Begin of run() in StatusMonitor' )
 		self.socket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 		self.socket.bind( ( '', 8889 ) )
 		while not self._stop_event.is_set():
 			( r, w ,x ) = select.select( [self.socket],[],[], 0.5 )
 			if len( r ) > 0:
 				data = r[0].recv(1)
+				try:
+					data = data.decode( 'ascii' )
+				except:
+					continue
 				if data in ( '0','1' ):
 					try:
 						self.module.set_space_status( data, time.time() )
 					except Exception as e:
 						logging.warning( 'Failed to update status: {0}'.format( e ) )
-		self.socket.close()	
+		self.socket.close()
+		logging.debug( 'End of run() in StatusMonitor' )
 
 class tkkrlab( _module ):
 	"""Bot module to do tkkrlab things"""
