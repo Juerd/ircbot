@@ -144,18 +144,37 @@ class Bot( SingleServerIRCBot ):
 			elif cmd == 'restart_class':
 				raise BotReloadException
 			# config commands
-			elif cmd == 'get_config' and len( args ) == 2:
+			elif cmd == 'get_config' and len( args ) <= 2:
+				if len( args ) == 2:
+					try:
+						value = self.get_config( args[0], args[1] )
+						self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
+					except:
+						self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
+				elif len( args ) == 1:
+					try:
+						values = self.get_config( args[0] )
+						if len( values ) > 0:
+							self.notice( source, 'config[{}]: '.format( args[0] ) + ', '.join( [ '{}: "{}"'.format( k,v ) for ( k, v ) in values.iteritems() ] ) )
+						else:
+							self.notice( source, 'config[{}] is empty'.format( args[0] ) )
+					except:
+						self.notice( source, 'config[{}] not set'.format( args[0] ) )
+				else:
+					try:
+						self.notice( source, 'config groups: ' + ', '.join( self.get_config_groups() ) )
+					except Exception as e:
+						self.notice( source, 'No config groups: {}'.format( e ) )
+			elif cmd == 'set_config' and len( args ) >= 2:
+				if len( args ) >= 3:
+					config_val = ' '.join( args[2:] )
+				else:
+					config_val = None
 				try:
-					value = self.get_config( args[0], args[1] )
-					self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
-				except:
-					self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
-			elif cmd == 'set_config' and len( args ) >= 3:
-				try:
-					self.set_config( args[0], args[1], ' '.join( args[ 2: ] ) )
-					self.notice( source, 'Set config setting' )
+					self.set_config( args[0], args[1], config_val )
+					self.notice( source, 'Set config setting' if config_val else 'Cleared config setting' )
 				except Exception as e:
-					self.notice( source, 'Failed setting config setting: {0}'.format( e ) )
+					self.notice( source, 'Failed setting/clearing config setting: {0}'.format( e ) )
 			# other base admin commands
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
@@ -181,7 +200,7 @@ class Bot( SingleServerIRCBot ):
 							self.notice( target, module.get_cmd( args[0] ).__doc__ )
 			else:
 				self.notice( target, '!help: this help text (send !help <command> for command help, send !help module <module> for module help)' )
-				for ( module_name, module ) in [ lst for lst in self.modules.get_loaded_modules() if not lst[1].admin_only ]:
+				for ( module_name, module ) in [ lst for lst in self.modules.get_loaded_modules() if lst[1].has_commands and not lst[1].admin_only ]:
 					cmds = module.get_cmd_list()
 					self.notice( target, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) if len( cmds ) > 0 else 'No commands' ) )
 
@@ -196,10 +215,6 @@ class Bot( SingleServerIRCBot ):
 				self.notice( source, '!raw:                                   send raw irc command' )
 				self.notice( source, '!admins:                                see who are admin' )
 				self.notice( source, '!restart_class:                         restart the main Bot class' )
-				self.notice( source, '!available_modules:                     see modules that are not currently loaded' )
-				self.notice( source, '!reload_module <module>[ <module>...]:  reload one or more modules' )
-				self.notice( source, '!enable_module <module>[ <module>...]:  enable one or more modules' )
-				self.notice( source, '!disable_module <module>[ <module>...]: disable one or more modules' )
 				for ( module_name, module ) in self.modules.get_loaded_modules():
 					cmds = module.get_admin_cmd_list()
 					if len( cmds ) > 0:
@@ -259,8 +274,13 @@ class Bot( SingleServerIRCBot ):
 	def on_welcome( self, c, e ):
 		logging.debug( "on_welcome" )
 		c.join( self.channel )
+		self.__module_handle( 'welcome', c, e )
 
-	def get_config( self, group, key = None ):
+	def get_config_groups( self ):
+		resultset = self.db.execute( 'select distinct `group` from config' )
+		return [ g for ( g, ) in resultset.fetchall() ]
+
+	def get_config( self, group, key = None, default = None ):
 		"""gets a config value"""
 		logging.debug( 'get config %s.%s', group, key )
 		if key == None:
@@ -273,6 +293,8 @@ class Bot( SingleServerIRCBot ):
 			resultset = self.db.execute( 'select `value` from config where `group` = :group and `key` = :key', { 'group': group, 'key': key } )
 			value = resultset.fetchone()
 			if value == None:
+				if default != None:
+					return default
 				raise Exception
 			return value[0]
 

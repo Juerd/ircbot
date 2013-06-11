@@ -1,8 +1,9 @@
 import logging
 
 class _module( object ):
-	def __init__( self, manager, admin_only = False ):
+	def __init__( self, manager, has_commands = True, admin_only = False ):
 		self.mgr = manager
+		self.has_commands = has_commands
 		self.admin_only = admin_only
 		logging.debug( 'Loading module {0}'.format( self.__class__.__name__ ) )
 	def __del__( self ):
@@ -32,7 +33,7 @@ class _module( object ):
 	def privmsg( self, target, message ):
 		self.mgr.privmsg( target, message )
 		
-	def get_config( self, key ):
-		return self.mgr.get_config( self.__class__.__name__, key )
+	def get_config( self, key, default = None ):
+		return self.mgr.get_config( self.__class__.__name__, key, default )
 	def set_config( self, key, value ):
 		self.mgr.set_config( self.__class__.__name__, key, value )
