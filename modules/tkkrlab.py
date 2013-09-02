@@ -48,7 +48,11 @@ class tkkrlab( _module ):
 	"""Bot module to do tkkrlab things"""
 	def __init__( self, mgr ):
 		_module.__init__( self, mgr )
-			
+		
+		status_history = self.get_config( 'space_state_history', False )
+		if status_history:
+			self.space_status_history = [ f.split(':') for f in status_history.split( ',' ) ]
+		
 		cfg_state = None
 		cfg_time = None
 		try:
@@ -95,6 +99,9 @@ class tkkrlab( _module ):
 			return [ 'Error: status is not True/False but {0}'.format( space_open ) ]
 		else:
 			return [ 'We are {0} since {1}'.format( 'Open' if space_open == True else 'Closed', datetime.datetime.fromtimestamp( space_time, tzlocal() ).strftime( '%a, %d %b %Y %H:%M:%S %Z' ) ) ]
+            
+    def cmd_status_history( self, args, rouce, target, admin ):
+        pass
 	
 	def cmd_led( self, args, source, target, admin ):
 		"""!led <message>: put message on led matrix board"""
@@ -135,6 +142,7 @@ class tkkrlab( _module ):
 		"""Send a command to the led board"""
 		try:
 			url = urllib.parse.urlparse( self.get_config( 'led_url' ).format( urllib.parse.quote( message[:85] ) ) )
+            logging.debug( 'Sending request to LED board at {0}'.format( url ) )
 			conn = http.client.HTTPConnection( url.netloc, timeout=10 )
 			conn.request( 'GET', url.path )
 			response = conn.getresponse()
