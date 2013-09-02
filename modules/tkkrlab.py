@@ -143,12 +143,13 @@ class tkkrlab( _module ):
 		try:
 			url = urllib.parse.urlparse( self.get_config( 'led_url' ).format( urllib.parse.quote( message[:85] ) ) )
 			logging.debug( 'Sending request to LED board at {0}'.format( url ) )
-			logging.debug( 'Sending request to LED board at {0}'.format( url ) )
 			conn = http.client.HTTPConnection( url.netloc, timeout=10 )
 			conn.request( 'GET', url.path )
 			response = conn.getresponse()
 			res = response.status
+			reply = response.read()
 			conn.close()
+			logging.debug( 'LED board reply: {0}'.format( str( reply ) ) )
 			if res != 200:
 				return 'Error:' + res + ' - ' + response.reason
 			else:
