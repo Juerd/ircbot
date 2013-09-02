@@ -95,7 +95,8 @@ class tkkrlab( _module ):
 		self.__send_led_lines( [
 			'Welcome @ space', 
 			user[:16].center(16),
-			'{:%H:%M:%S}'.format( datetime.datetime.now() )
+			'',
+			'{:%H:%M}'.format( datetime.datetime.now() ).rjust(16)
 		] )
 
 	def admin_cmd_force_status( self, args, source, target, admin ):
