@@ -95,7 +95,7 @@ class tkkrlab( _module ):
 		self.__send_led_lines( [
 			'Welcome @ space', 
 			user[:16].center(16),
-			'',
+			'', '',
 			'{:%H:%M}'.format( datetime.datetime.now() ).rjust(16)
 		] )
 
