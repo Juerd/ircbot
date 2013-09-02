@@ -142,7 +142,8 @@ class tkkrlab( _module ):
 		"""Send a command to the led board"""
 		try:
 			url = urllib.parse.urlparse( self.get_config( 'led_url' ).format( urllib.parse.quote( message[:85] ) ) )
-            logging.debug( 'Sending request to LED board at {0}'.format( url ) )
+			logging.debug( 'Sending request to LED board at {0}'.format( url ) )
+			logging.debug( 'Sending request to LED board at {0}'.format( url ) )
 			conn = http.client.HTTPConnection( url.netloc, timeout=10 )
 			conn.request( 'GET', url.path )
 			response = conn.getresponse()
