@@ -84,7 +84,15 @@ class tkkrlab( _module ):
 			result = re.search( '^(.+) (entered|is near) the space', message )
 			if result:
 				nick = result.group(1)
-				self.__send_led( 'Welcome @ space {: ^16}'.format( nick.center(16) ) )
+				self.__led_welcome( nick )
+
+	def admin_cmd_led_welcome( self, args, source, target, admin ):
+		if not admin: return
+		if len( args ) == 0: return
+		self.__led_welcome( args[0] )
+
+	def __led_welcome( self, user ):
+		self.__send_led( 'Welcome @ space {: ^16}'.format( user[:16].center(16) ) )
 
 	def admin_cmd_force_status( self, args, source, target, admin ):
 		"""!force_status <0|1>: force space status to closed/open"""
