@@ -92,7 +92,11 @@ class tkkrlab( _module ):
 		self.__led_welcome( args[0] )
 
 	def __led_welcome( self, user ):
-		self.__send_led( 'Welcome @ space {: ^16}'.format( user[:16].center(16) ) )
+		self.__send_led_lines( [
+			'Welcome @ space', 
+			user[:16].center(16),
+			'{:%H:%M:%S}'.format( datetime.datetime.now() )
+		] )
 
 	def admin_cmd_force_status( self, args, source, target, admin ):
 		"""!force_status <0|1>: force space status to closed/open"""
@@ -156,6 +160,10 @@ class tkkrlab( _module ):
 	def __set_topic( self, channel, new_topic ):
 		self.mgr.bot.connection.topic( channel, new_topic + ' | ' + self.get_config( 'topic', 'See our activities on http://bit.ly/AsJMNc' ) )
 		self.privmsg( channel, new_topic )
+
+	def __send_led_lines( self, lines ):
+		message = ''.join( [ line[:16].ljust(16) for line in lines ] )
+		self.__send_led( message )
 
 	def __send_led( self, message):
 		"""Send a command to the led board"""
