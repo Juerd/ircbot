@@ -99,9 +99,9 @@ class tkkrlab( _module ):
 			return [ 'Error: status is not True/False but {0}'.format( space_open ) ]
 		else:
 			return [ 'We are {0} since {1}'.format( 'Open' if space_open == True else 'Closed', datetime.datetime.fromtimestamp( space_time, tzlocal() ).strftime( '%a, %d %b %Y %H:%M:%S %Z' ) ) ]
-            
-    def cmd_status_history( self, args, rouce, target, admin ):
-        pass
+
+	def cmd_status_history( self, args, rouce, target, admin ):
+		pass
 	
 	def cmd_led( self, args, source, target, admin ):
 		"""!led <message>: put message on led matrix board"""
