@@ -1,6 +1,6 @@
 from ._module import _module
 
-import http.client, urllib.request, urllib.parse, urllib.error, urllib.parse
+import http.client, urllib.request, urllib.parse, urllib.error
 
 import datetime
 from dateutil.tz import tzlocal
@@ -141,10 +141,10 @@ class tkkrlab( _module ):
 	def __send_led( self, message):
 		"""Send a command to the led board"""
 		try:
-			url = urllib.parse.urlparse( self.get_config( 'led_url' ).format( urllib.parse.quote( message[:85] ) ) )
+			url = urllib.parse.urlsplit( self.get_config( 'led_url' ).format( urllib.parse.quote( message[:85] ) ) )
 			logging.debug( 'Sending request to LED board at {0}'.format( url.geturl() ) )
 			conn = http.client.HTTPConnection( url.netloc, timeout=10 )
-			conn.request( 'GET', url.path )
+			conn.request( 'GET', url.path + '?' + url.query )
 			response = conn.getresponse()
 			res = response.status
 			reply = response.read()
