@@ -74,7 +74,11 @@ class tkkrlab( _module ):
 	def stop(self):
 		self.thread.stop()
 		self.thread.join()
-	
+
+	def on_notice( self, source, target, message ):
+	    if source.lower() == 'lock-o-matic':
+	        logging.debug( 'slot zegt: {}'.format( message ) )
+
 	def admin_cmd_force_status( self, args, source, target, admin ):
 		"""!force_status <0|1>: force space status to closed/open"""
 		if not admin: return
