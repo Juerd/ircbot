@@ -2,10 +2,14 @@ from ._module import _module
 
 import http.client, urllib.request, urllib.parse, urllib.error
 
+from irclib import nm_to_n
+
 import datetime
 from dateutil.tz import tzlocal
 import dateutil.parser
 import time
+
+import re
 
 import random
 import os.path
@@ -76,8 +80,11 @@ class tkkrlab( _module ):
 		self.thread.join()
 
 	def on_notice( self, source, target, message ):
-	    if source.lower() == 'lock-o-matic':
-	        logging.debug( 'slot zegt: {}'.format( message ) )
+		if nm_to_n( source.lower() ) == 'lock-o-matic':
+			result = re.search( '^(.+) (entered|is near) the space', message )
+			if result:
+				nick = result.group(1)
+				self.__send_led( 'Welcome {}!'.format( nick ) )
 
 	def admin_cmd_force_status( self, args, source, target, admin ):
 		"""!force_status <0|1>: force space status to closed/open"""
