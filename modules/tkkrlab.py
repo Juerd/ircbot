@@ -91,7 +91,7 @@ class tkkrlab( _module ):
 					status_bool = result.group('status') == 'open'
 					status_time = dateutil.parser.parse(result.group('datetime'), dayfirst=True).replace(tzinfo=tzlocal())
 					(space_open, space_time) = self.__get_space_status()
-					if space_open != status_bool or abs((space_time - status_time).total_seconds()) > 100:
+					if space_open != status_bool or not space_time or abs((space_time - status_time).total_seconds()) > 100:
 						self.set_space_status( '1' if status_bool else '0', status_time )
 
 	def admin_cmd_led_welcome( self, args, source, target, admin ):
@@ -130,7 +130,7 @@ class tkkrlab( _module ):
 		if space_open not in ( True, False ):
 			return [ 'Error: status is not True/False but {0}'.format( space_open ) ]
 		else:
-			return [ 'We are {0} since {1}'.format( 'Open' if space_open == True else 'Closed', space_time.strftime( '%a, %d %b %Y %H:%M:%S %Z' ) ) ]
+			return [ 'We are {0} since {1}'.format( 'Open' if space_open == True else 'Closed', space_time.strftime( '%a, %d %b %Y %H:%M:%S %Z' ) if space_time else '<unknown>' ) ]
 
 	def cmd_status_history( self, args, rouce, target, admin ):
 		pass
