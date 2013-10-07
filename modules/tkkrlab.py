@@ -92,6 +92,7 @@ class tkkrlab( _module ):
 					status_time = dateutil.parser.parse(result.group('datetime'), dayfirst=True).replace(tzinfo=tzlocal())
 					(space_open, space_time) = self.__get_space_status()
 					if space_open != status_bool or not space_time or abs((space_time - status_time).total_seconds()) > 100:
+						logging.info( 'Space status too different from Lock-O-Matic status, updating own status' )
 						self.set_space_status( '1' if status_bool else '0', status_time )
 
 	def admin_cmd_led_welcome( self, args, source, target, admin ):
