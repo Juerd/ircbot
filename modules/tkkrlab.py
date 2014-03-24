@@ -49,6 +49,10 @@ class StatusMonitor( threading.Thread ):
 		logging.debug( 'End of run() in StatusMonitor' )
 
 class tkkrlab( _module ):
+	CFG_KEY_STATE = 'space_state'
+	CFG_KEY_STATE_TIME = 'space_state_time'
+	CFG_KEY_STATE_NICK = 'space.state.nick'
+
 	"""Bot module to do tkkrlab things"""
 	def __init__( self, mgr ):
 		_module.__init__( self, mgr )
@@ -59,16 +63,22 @@ class tkkrlab( _module ):
 		
 		cfg_state = None
 		cfg_time = None
+		cfg_who = None
 		try:
-			cfg_state = self.get_config( 'space_state' ) == '1'
+			cfg_state = self.get_config( self.CFG_KEY_STATE ) == '1'
 		except:
 			pass
 		try:
-			cfg_time = dateutil.parser.parse( self.get_config( 'space_state_time' ), tzinfos={'CET': 3600, 'CEST': 7200} )
+			cfg_time = dateutil.parser.parse( self.get_config( self.CFG_KEY_STATE_TIME ), tzinfos={'CET': 3600, 'CEST': 7200} )
+		except:
+			pass
+		try:
+			cfg_who = self.get_config( self.CFG_KEY_STATE_NICK )
 		except:
 			pass
 		
-		self.space_status = ( cfg_state, cfg_time )
+		self.space_status = ( cfg_state, cfg_time, cfg_who )
+
 		try:
 			self.thread = StatusMonitor( self )
 			self.thread.start()
@@ -90,7 +100,8 @@ class tkkrlab( _module ):
 				if result:
 					status_bool = result.group('status') == 'open'
 					status_time = dateutil.parser.parse(result.group('datetime'), dayfirst=True).replace(tzinfo=tzlocal())
-					(space_open, space_time) = self.__get_space_status()
+					space_open = self.__get_space_open()
+					space_time = self.__get_space_open_time()
 					if space_open != status_bool or not space_time or abs((space_time - status_time).total_seconds()) > 100:
 						logging.info( 'Space status too different from Lock-O-Matic status, updating own status' )
 						self.set_space_status( '1' if status_bool else '0', status_time )
@@ -113,12 +124,12 @@ class tkkrlab( _module ):
 		if not admin: return
 		if len( args ) == 0: return
 		if args[0] in ( '0', '1' ):
-			self.set_space_status( args[0], datetime.now().replace(tzinfo=tzlocal()) )
+			self.set_space_status( args[0], datetime.now().replace(tzinfo=tzlocal()), source )
 	
 	def admin_cmd_force_topic_update( self, args, source, target, admin ):
 		"""!force_topic_update: force topic update"""
 		if not admin: return
-		( space_open, space_time ) = self.__get_space_status()
+		space_open = self.__get_space_open()
 		self.__set_topic( '#tkkrlab', 'We zijn Open' if space_open else 'We zijn Dicht' )
 		
 #	def cmd_quote( self, args, source, target, admin ):
@@ -127,18 +138,25 @@ class tkkrlab( _module ):
 		
 	def cmd_status( self, args, source, target, admin ):
 		"""!status: to get open/close status of the space"""
-		( space_open, space_time ) = self.__get_space_status()
+		space_open = self.__get_space_open()
+		space_time = self.__get_space_open_time()
+		space_nick = self.__get_space_open_nick()
 		if space_open not in ( True, False ):
 			return [ 'Error: status is not True/False but {0}'.format( space_open ) ]
 		else:
-			return [ 'We are {0} since {1}'.format( 'Open' if space_open == True else 'Closed', space_time.strftime( '%a, %d %b %Y %H:%M:%S %Z' ) if space_time else '<unknown>' ) ]
+			open = 'Open' if space_open == True else 'Closed'
+			time = space_time.strftime( '%a, %d %b %Y %H:%M:%S %Z' ) if space_time else '<unknown>'
+			if space_nick:
+				return [ 'We are {0} since {1} by {2}'.format( open, time, space_nick ) ]
+			else:
+				return [ 'We are {0} since {1}'.format( open, time ) ]
 
-	def cmd_status_history( self, args, rouce, target, admin ):
+	def __cmd_status_history( self, args, source, target, admin ):
 		pass
 	
 	def cmd_led( self, args, source, target, admin ):
 		"""!led <message>: put message on led matrix board"""
-		( space_open, space_time ) = self.__get_space_status()
+		space_open = self.__get_space_open()
 		if space_open == True:
 			return [ 'Led: {0}'.format( self.__send_led( ' '.join( args ) ) ) ]
 		elif space_open == False:
@@ -148,24 +166,30 @@ class tkkrlab( _module ):
 		
 	def cmd_time( self, args, source, target, admin ):
 		"""!time: put current time on led matrix board"""
-		( space_open, space_time ) = self.__get_space_status()
-		if space_open == True:
+		if self.__get_space_open() == True:
 			self.__send_led('{:%H:%M}'.format(datetime.now()).center(16))
 
-	def set_space_status( self, status, aTime ):
-		( space_open, space_time ) = self.__get_space_status()
+	def set_space_status( self, status, aTime, who = None ):
+		space_open = self.__get_space_open()
 		if space_open == None:
 			space_open = status == '1'
 		if space_open != ( status == '1' ):
 			space_open = status == '1'
 			self.__set_topic( '#tkkrlab', 'We zijn Open' if space_open else 'We zijn Dicht' )
-		self.space_status = ( space_open, aTime )
-		self.set_config( 'space_state', space_open )
-		self.set_config( 'space_state_time', aTime.strftime( '%Y-%m-%dT%H:%M:%S %Z' ) )
+		self.space_status = ( space_open, aTime, who )
+		self.set_config( self.CFG_KEY_STATE, space_open )
+		self.set_config( self.CFG_KEY_STATE_TIME, aTime.strftime( '%Y-%m-%dT%H:%M:%S %Z' ) )
+		self.set_config( self.CFG_KEY_STATE_NICK, who )
 		return self.space_status
-		
-	def __get_space_status( self ):
-		return self.space_status
+
+	def __get_space_open(self):
+		return self.space_status[0] if self.space_status and len(self.space_status) > 0 else None
+
+	def __get_space_open_time(self):
+		return self.space_status[1] if self.space_status and len(self.space_status) > 1 else None
+
+	def __get_space_open_nick(self):
+		return self.space_status[2] if self.space_status and len(self.space_status) > 2 else None
 
 	def __set_topic( self, channel, new_topic ):
 		self.mgr.bot.connection.topic( channel, new_topic + ' | ' + self.get_config( 'topic', 'See our activities on http://bit.ly/AsJMNc' ) )
