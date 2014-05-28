@@ -18,6 +18,7 @@ class BotExitException( Exception ):
 class Bot( SingleServerIRCBot ):
     """The main brain of the IRC bot."""
     def __init__( self ):
+        logging.debug('Bot __init__')
         self.last_msg = -1
         self.msg_flood_limit = 0.25
 
@@ -260,14 +261,23 @@ class Bot( SingleServerIRCBot ):
         self.connection.names( [e.target()] )
         self.__module_handle( 'join', c, e )
 
+    def on_part(self, c, e):
+        self.connection.names([e.target()])
+
+    def on_kick(self, c, e):
+        self.connection.names([e.target()])
+
     def on_mode( self, c, e ):
         self.connection.names( [e.target()] )
 
     def on_namreply( self, c, e ):
         chan = e.arguments()[1]
-        people = e.arguments()[2].split( ' ' )
+        people = e.arguments()[2].rstrip().split( ' ' )
         ops = [ p[1:] for p in people if p[0] == '@' ]
         self.channel_ops[ chan ] = ops
+
+    def on_nick(self, c, e):
+        self.connection.names([e.target()])
 
     def on_nicknameinuse( self, c, e ):
         """Gets called if the server complains about the name being in use. Tries to set the nick to nick + '_'"""
