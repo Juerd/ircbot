@@ -17,6 +17,9 @@ import threading, socket, select
 
 import logging
 
+#website updating
+import urllib.request
+
 class StatusMonitor( threading.Thread ):
 	def __init__( self, module ):
 		super( StatusMonitor, self ).__init__()
@@ -28,10 +31,14 @@ class StatusMonitor( threading.Thread ):
 		self._stop_event.set()
 		
 	def run( self ):
-		logging.debug( 'Begin of run() in StatusMonitor' )
+		try:
+			port = int(self.module.get_config('status_listen_port'))
+		except:
+			port = 8889
+		logging.debug( 'Begin of run() in StatusMonitor, port: {}'.format(port) )
 		self.socket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 		self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # bind even if the socket is not cleanly closed
-		self.socket.bind( ( '', 8889 ) )
+		self.socket.bind( ( '', port ) )
 		while not self._stop_event.is_set():
 			( r, w ,x ) = select.select( [self.socket],[],[], 0.5 )
 			if len( r ) > 0:
@@ -42,9 +49,11 @@ class StatusMonitor( threading.Thread ):
 					continue
 				if data in ( '0','1' ):
 					try:
-						self.module.set_space_status( data, datetime.now().replace(tzinfo=tzlocal()) )
+						self.module.set_space_status( data, datetime.now().replace(tzinfo=tzlocal()), 'Lock-O-Matic' )
 					except Exception as e:
 						logging.warning( 'Failed to update status: {0}'.format( e ) )
+				else:
+					logging.warning('Unknown data: {}'.format(data))
 		self.socket.close()
 		logging.debug( 'End of run() in StatusMonitor' )
 
@@ -91,7 +100,7 @@ class tkkrlab( _module ):
 
 	def on_notice( self, source, target, message ):
 		if nm_to_n( source.lower() ) in ( 'jawsper', 'lock-o-matic' ):
-			result = re.search( '^(.+) (entered|is near) the space', message )
+			result = re.search( '^Welcome (.+)', message )
 			if result:
 				nick = result.group(1)
 				self.__led_welcome( nick )
@@ -104,7 +113,7 @@ class tkkrlab( _module ):
 					space_time = self.__get_space_open_time()
 					if space_open != status_bool or not space_time or abs((space_time - status_time).total_seconds()) > 100:
 						logging.info( 'Space status too different from Lock-O-Matic status, updating own status' )
-						self.set_space_status( '1' if status_bool else '0', status_time )
+						self.set_space_status( '1' if status_bool else '0', status_time, 'Lock-O-Matic' )
 
 	def admin_cmd_led_welcome( self, args, source, target, admin ):
 		if not admin: return
@@ -156,6 +165,8 @@ class tkkrlab( _module ):
 	
 	def cmd_led( self, args, source, target, admin ):
 		"""!led <message>: put message on led matrix board"""
+		if source == target:
+			return [ 'Kappen nou met die shit' ]
 		space_open = self.__get_space_open()
 		if space_open == True:
 			return [ 'Led: {0}'.format( self.__send_led( ' '.join( args ) ) ) ]
@@ -176,6 +187,7 @@ class tkkrlab( _module ):
 		if space_open != ( status == '1' ):
 			space_open = status == '1'
 			self.__set_topic( '#tkkrlab', 'We zijn Open' if space_open else 'We zijn Dicht' )
+			self.__update_website_state(space_open)
 		self.space_status = ( space_open, aTime, who )
 		self.set_config( self.CFG_KEY_STATE, space_open )
 		self.set_config( self.CFG_KEY_STATE_TIME, aTime.strftime( '%Y-%m-%dT%H:%M:%S %Z' ) )
@@ -229,4 +241,9 @@ class tkkrlab( _module ):
 			return 'Error: quote file not found'
 		except:
 			return 'Error: no quote file defined'
+
+	def __update_website_state(self, state):
+		url = self.get_config('website_url').format('open' if state else 'closed')
+		with urllib.request.urlopen(url) as req:
+			logging.debug('Website space update: ' + req.read().decode('ascii'))
 
