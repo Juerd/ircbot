@@ -20,6 +20,8 @@ import logging
 #website updating
 import urllib.request
 
+import twitter
+
 class StatusMonitor( threading.Thread ):
 	def __init__( self, module ):
 		super( StatusMonitor, self ).__init__()
@@ -132,6 +134,7 @@ class tkkrlab( _module ):
 		"""!force_status <0|1>: force space status to closed/open"""
 		if not admin: return
 		if len( args ) == 0: return
+		logging.debug('force_status: {}'.format(args))
 		if args[0] in ( '0', '1' ):
 			self.set_space_status( args[0], datetime.now().replace(tzinfo=tzlocal()), source )
 	
@@ -169,7 +172,7 @@ class tkkrlab( _module ):
 			return [ 'Kappen nou met die shit' ]
 		space_open = self.__get_space_open()
 		if space_open == True:
-			return [ 'Led: {0}'.format( self.__send_led( ' '.join( args ) ) ) ]
+			return [ 'Led: {0}'.format( self.__send_led( '<' + source + '> ' + ' '.join( args ) ) ) ]
 		elif space_open == False:
 			return [ 'Sorry ' + source + ', can only do this when space is open.' ]
 		else:
@@ -184,10 +187,10 @@ class tkkrlab( _module ):
 		space_open = self.__get_space_open()
 		if space_open == None:
 			space_open = status == '1'
+		logging.debug('set_space_status [space_open: {}, status: {}]'.format(space_open, status))
 		if space_open != ( status == '1' ):
 			space_open = status == '1'
-			self.__set_topic( '#tkkrlab', 'We zijn Open' if space_open else 'We zijn Dicht' )
-			self.__update_website_state(space_open)
+			self.__on_state_change(space_open)
 		self.space_status = ( space_open, aTime, who )
 		self.set_config( self.CFG_KEY_STATE, space_open )
 		self.set_config( self.CFG_KEY_STATE_TIME, aTime.strftime( '%Y-%m-%dT%H:%M:%S %Z' ) )
@@ -235,15 +238,37 @@ class tkkrlab( _module ):
 	def __random_quote( self ):
 		"""Read a quote from a text file"""
 		try:
-			with open( self.get_config( 'quote_file' ) ) as fd:
+			with open( self.get_config( 'quote_file' ), 'rt', encoding='utf-8' ) as fd:
 				return random.choice( fd.readlines() )
 		except IOError:
 			return 'Error: quote file not found'
-		except:
-			return 'Error: no quote file defined'
+		except Exception as e:
+			return 'Error: no quote file defined: {}'.format(e)
+
+	def __on_state_change(self, state):
+		self.__set_topic('#tkkrlab', 'We zijn open' if state else 'We zijn dicht')
+		self.__update_website_state(state)
+		self.__update_twitter(state)
 
 	def __update_website_state(self, state):
 		url = self.get_config('website_url').format('open' if state else 'closed')
 		with urllib.request.urlopen(url) as req:
 			logging.debug('Website space update: ' + req.read().decode('ascii'))
+
+	def __update_twitter(self, state):
+		now = datetime.now()
+		timestamp = now.strftime("%d-%m-%Y %H:%M")
+		message = 'We are {} {} Quote: {}'.format('open' if state else 'closed', timestamp, self.__random_quote())
+		self.__send_tweet(message)
+
+	def __send_tweet(self, text):
+		params = {}
+		for name in ['consumer_key', 'consumer_secret', 'token', 'token_secret']:
+			params[name] = self.get_config('twitter.' + name)
+		twit = twitter.Twitter(auth=twitter.OAuth(**params))
+		twit.statuses.update(status=text[:140])
+
+	def admin_cmd_twitter_test(self, args, source, target, admin):
+		"""!twitter_test text"""
+		return [self.__random_quote()]
 
