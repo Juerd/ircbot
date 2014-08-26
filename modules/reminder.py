@@ -1,5 +1,4 @@
 from ._module import _module
-from irclib import nm_to_n
 import logging
 
 class reminder( _module ):
@@ -8,7 +7,7 @@ class reminder( _module ):
 		self.reminders = {}
 
 	def on_join( self, c, e ):
-		name = nm_to_n( e.source() )
+		name = e.source.nick
 		if name is not c.get_nickname():
 			logging.debug( '%s joined %s', name, e.target() )
 			if name in self.reminders:

@@ -2,8 +2,6 @@ from ._module import _module
 
 import http.client, urllib.request, urllib.parse, urllib.error
 
-from irclib import nm_to_n
-
 from datetime import datetime
 from dateutil.tz import tzlocal
 import dateutil.parser
@@ -101,7 +99,7 @@ class tkkrlab( _module ):
 		self.thread.join()
 
 	def on_notice( self, source, target, message ):
-		if nm_to_n( source.lower() ) in ( 'jawsper', 'lock-o-matic' ):
+		if source.nick.lower() in ( 'jawsper', 'lock-o-matic' ):
 			result = re.search( '^Welcome (.+)', message )
 			if result:
 				nick = result.group(1)
