@@ -166,7 +166,7 @@ class tkkrlab( _module ):
 	def __cmd_status_history( self, args, source, target, admin ):
 		pass
 	
-	def cmd_led( self, args, source, target, admin ):
+	def __cmd_led( self, args, source, target, admin ):
 		"""!led <message>: put message on led matrix board"""
 		if source == target:
 			return [ 'Kappen nou met die shit' ]
@@ -178,7 +178,7 @@ class tkkrlab( _module ):
 		else:
 			return [ 'Error: status is not True/False but {0}'.format( space_open ) ]
 		
-	def cmd_time( self, args, source, target, admin ):
+	def __cmd_time( self, args, source, target, admin ):
 		"""!time: put current time on led matrix board"""
 		if self.__get_space_open() == True:
 			self.__send_led('{:%H:%M}'.format(datetime.now()).center(16))
