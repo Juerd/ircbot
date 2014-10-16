@@ -29,6 +29,8 @@ class mpdclient(_module):
             return '{artist} - {title}'.format(**song)
         elif 'title' in song:
             return song['title']
+        elif 'file' in song:
+            return song['file']
         else:
             return 'nothing at all'
     
