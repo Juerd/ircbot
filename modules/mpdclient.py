@@ -5,59 +5,9 @@ import mpd
 import logging
 import time
 
-class mpd_thread(threading.Thread):
-    def __init__(self, module):
-        return
-        super(mpd_thread, self).__init__()
-        self._stop_event = threading.Event()
-        self.module = module
-        
-    def stop(self):
-        logging.debug('Stopping mpd_thread thread')
-        self._stop_event.set()
-        
-    def run(self):
-        logging.debug('Begin of run() in mpd_thread')
-        c = mpd.MPDClient()
-        c.idletimeout = 5
-        connected = False
-        song_id = None
-        while not self._stop_event.is_set():
-            if not connected:
-                try:
-                    c.connect('barstation', 6600)
-                    connected = True
-                    song_id = c.currentsong()['id']
-                except:
-                    pass
-            else:
-                try:
-                    result = c.idle('player')
-                    if 'player' in result:
-                        song = c.currentsong()
-                        if song['id'] != song_id:
-                            song_id = song['id']
-                            now_playing = 'Now playing: {artist} - {title}'.format(**song)
-                            self.notice('#tkkrlab', now_playing)
-                except:
-                    logging.exception()
-                    connected = False
-#            time.sleep(5)
-        logging.debug('End of run() in mpd_thread')
-
 class mpdclient(_module):
     def __init__(self, mgr):
         _module.__init__(self, mgr)
-        #try:
-        #    self.thread = mpd_thread(self)
-        #    self.thread.start()
-        #except Exception as e:
-        #    logging.warning('Thread exception: {0}'.format(e))
-
-    def stop(self):
-        pass
-        #self.thread.stop()
-        #self.thread.join()
     
     def get_currentsong(self):
         try:
@@ -79,6 +29,8 @@ class mpdclient(_module):
             return '{artist} - {title}'.format(**song)
         elif 'title' in song:
             return song['title']
+        elif 'file' in song:
+            return song['file']
         else:
             return 'nothing at all'
     
