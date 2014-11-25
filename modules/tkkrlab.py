@@ -100,7 +100,7 @@ class tkkrlab( _module ):
 
 	def on_notice( self, source, target, message ):
 		if source.nick.lower() in ( 'jawsper', 'lock-o-matic' ):
-			result = re.search( '^Welcome (.+)', message )
+			result = re.search( '^(.+) entered the space', message )
 			if result:
 				nick = result.group(1)
 				self.__led_welcome( nick )
