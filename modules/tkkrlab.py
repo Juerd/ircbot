@@ -61,6 +61,13 @@ class tkkrlab( _module ):
 	CFG_KEY_STATE = 'space_state'
 	CFG_KEY_STATE_TIME = 'space_state_time'
 	CFG_KEY_STATE_NICK = 'space.state.nick'
+	CFG_KEY_TEXT_OPEN = 'text.space_open'
+	CFG_KEY_TEXT_CLOSED = 'text.space_closed'
+	CFG_KEY_TOPIC = 'topic'
+
+	DEFAULT_TEXT_OPEN = 'We zijn open'
+	DEFAULT_TEXT_CLOSED = 'We zijn dicht'
+	DEFAULT_TOPIC = 'See our activities on http://bit.ly/AsJMNc'
 
 	"""Bot module to do tkkrlab things"""
 	def __init__( self, mgr ):
@@ -139,8 +146,7 @@ class tkkrlab( _module ):
 	def admin_cmd_force_topic_update( self, args, source, target, admin ):
 		"""!force_topic_update: force topic update"""
 		if not admin: return
-		space_open = self.__get_space_open()
-		self.__set_topic( '#tkkrlab', 'We zijn Open' if space_open else 'We zijn Dicht' )
+		self.__set_default_topic();
 		
 #	def cmd_quote( self, args, source, target, admin ):
 #		"""!quote: to get a random quote"""
@@ -205,8 +211,19 @@ class tkkrlab( _module ):
 		return self.space_status[2] if self.space_status and len(self.space_status) > 2 else None
 
 	def __set_topic( self, channel, new_topic ):
-		self.mgr.bot.connection.topic( channel, new_topic + ' | ' + self.get_config( 'topic', 'See our activities on http://bit.ly/AsJMNc' ) )
-		self.privmsg( channel, new_topic )
+		channel_topic = new_topic
+		cfg_topic = self.get_config(self.CFG_KEY_TOPIC, self.DEFAULT_TOPIC)
+		if cfg_topic:
+			channel_topic += ' | ' + cfg_topic
+		self.mgr.bot.connection.topic(channel, channel_topic)
+		self.privmsg(channel, new_topic)
+
+	def __set_default_topic(self):
+		space_open = self.__get_space_open()
+		key = self.CFG_KEY_TEXT_OPEN if space_open else self.CFG_KEY_TEXT_CLOSED
+		default = self.DEFAULT_TEXT_OPEN if space_open else self.DEFAULT_TEXT_CLOSED
+		topic = self.get_config(key, default)
+		self.__set_topic('#tkkrlab', topic)
 
 	def __send_led_lines( self, lines ):
 		message = ''.join( [ line[:16].ljust(16) for line in lines ] )
@@ -244,7 +261,7 @@ class tkkrlab( _module ):
 			return 'Error: no quote file defined: {}'.format(e)
 
 	def __on_state_change(self, state):
-		self.__set_topic('#tkkrlab', 'We zijn open' if state else 'We zijn dicht')
+		self.__set_default_topic()
 		self.__update_website_state(state)
 		self.__update_twitter(state)
 
