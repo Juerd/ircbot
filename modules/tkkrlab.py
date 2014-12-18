@@ -192,13 +192,18 @@ class tkkrlab( _module ):
 		if space_open == None:
 			space_open = status == '1'
 		logging.debug('set_space_status [space_open: {}, status: {}]'.format(space_open, status))
+		change = False
 		if space_open != ( status == '1' ):
 			space_open = status == '1'
-			self.__on_state_change(space_open)
+			change = True
 		self.space_status = ( space_open, aTime, who )
 		self.set_config( self.CFG_KEY_STATE, space_open )
 		self.set_config( self.CFG_KEY_STATE_TIME, aTime.strftime( '%Y-%m-%dT%H:%M:%S %Z' ) )
 		self.set_config( self.CFG_KEY_STATE_NICK, who )
+
+		if change:
+			self.__on_state_change(space_open)
+
 		return self.space_status
 
 	def __get_space_open(self):
