@@ -125,7 +125,7 @@ class tkkrlab( _module ):
 	def admin_cmd_led_welcome( self, args, source, target, admin ):
 		if not admin: return
 		if len( args ) == 0: return
-		self.__led_welcome( args[0] )
+		self.__led_welcome(' '.join(args))
 
 	def __led_welcome( self, user ):
 		try:
