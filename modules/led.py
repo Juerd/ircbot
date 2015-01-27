@@ -16,11 +16,14 @@ class led(_module):
         self.__send_led('{:%H:%M}'.format(datetime.now()).center(16))
 
     def send_led(self, message):
-        self.__send_led(message)
-    def __send_led( self, message):
+        self.__send_led(action=text, text=message[:85])
+    def send_welcome(self, name):
+        self.__send_led(action='welcome', name=name)
+        pass
+    def __send_led(self, **parameters):
         """Send a command to the led board"""
         try:
-            url = urllib.parse.urlsplit( self.get_config( 'url' ).format( urllib.parse.quote( message[:85] ) ) )
+            url = urllib.parse.urlsplit(self.get_config('url') + '?' + urllib.parse.urlencode(parameters))
             logging.debug( 'Sending request to LED board at {0}'.format( url.geturl() ) )
             conn = http.client.HTTPConnection( url.netloc, timeout=10 )
             conn.request( 'GET', url.path + '?' + url.query )
