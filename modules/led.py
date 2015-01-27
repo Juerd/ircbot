@@ -9,11 +9,11 @@ class led(_module):
         """!led <message>: put message on led matrix board"""
         if source.lower() == 'aaps' or source.lower().startswith('michielbrink'):
             pass
-        return [ 'Led: {0}'.format( self.__send_led( '<' + source + '> ' + ' '.join( args ) ) ) ]
+        return [ 'Led: {0}'.format( self.send_led( '<' + source + '> ' + ' '.join( args ) ) ) ]
 
     def cmd_time( self, args, source, target, admin ):
         """!time: put current time on led matrix board"""
-        self.__send_led('{:%H:%M}'.format(datetime.now()).center(16))
+        self.send_led('{:%H:%M}'.format(datetime.now()).center(16))
 
     def send_led(self, message):
         self.__send_led(action=text, text=message[:85])
