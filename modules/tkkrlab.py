@@ -128,12 +128,10 @@ class tkkrlab( _module ):
 		self.__led_welcome( args[0] )
 
 	def __led_welcome( self, user ):
-		self.__send_led_lines( [
-			'Welcome @ space', 
-			user[:16].center(16),
-			'', '',
-			'@ {:%H:%M}'.format(datetime.now()).rjust(16)
-		] )
+		try:
+			self.get_module('led').send_welcome(user)
+		except:
+			pass
 
 	def admin_cmd_force_status( self, args, source, target, admin ):
 		"""!force_status <0|1>: force space status to closed/open"""
@@ -169,23 +167,6 @@ class tkkrlab( _module ):
 
 	def __cmd_status_history( self, args, source, target, admin ):
 		pass
-	
-	def __cmd_led( self, args, source, target, admin ):
-		"""!led <message>: put message on led matrix board"""
-		if source == target:
-			return [ 'Kappen nou met die shit' ]
-		space_open = self.__get_space_open()
-		if space_open == True:
-			return [ 'Led: {0}'.format( self.__send_led( '<' + source + '> ' + ' '.join( args ) ) ) ]
-		elif space_open == False:
-			return [ 'Sorry ' + source + ', can only do this when space is open.' ]
-		else:
-			return [ 'Error: status is not True/False but {0}'.format( space_open ) ]
-		
-	def __cmd_time( self, args, source, target, admin ):
-		"""!time: put current time on led matrix board"""
-		if self.__get_space_open() == True:
-			self.__send_led('{:%H:%M}'.format(datetime.now()).center(16))
 
 	def set_space_status( self, status, aTime, who = None ):
 		space_open = self.__get_space_open()
@@ -229,31 +210,6 @@ class tkkrlab( _module ):
 		default = self.DEFAULT_TEXT_OPEN if space_open else self.DEFAULT_TEXT_CLOSED
 		topic = self.get_config(key, default)
 		self.__set_topic('#tkkrlab', topic)
-
-	def __send_led_lines( self, lines ):
-		message = ''.join( [ line[:16].ljust(16) for line in lines ] )
-		self.__send_led( message )
-
-	def __send_led( self, message):
-		"""Send a command to the led board"""
-		try:
-			url = urllib.parse.urlsplit( self.get_config( 'led_url' ).format( urllib.parse.quote( message[:85] ) ) )
-			logging.debug( 'Sending request to LED board at {0}'.format( url.geturl() ) )
-			conn = http.client.HTTPConnection( url.netloc, timeout=10 )
-			conn.request( 'GET', url.path + '?' + url.query )
-			response = conn.getresponse()
-			res = response.status
-			reply = response.read()
-			conn.close()
-			logging.debug( 'LED board reply: {0}'.format( str( reply ) ) )
-			if res != 200:
-				return 'Error:' + res + ' - ' + response.reason
-			else:
-				return 'OK'
-		except IOError as e:
-			return 'Cannot connect to LED server: "{0}"'.format( e )
-		except:
-			return 'Error: LED URL not set'
 
 	def __random_quote( self ):
 		"""Read a quote from a text file"""
