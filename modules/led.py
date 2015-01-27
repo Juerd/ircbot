@@ -16,10 +16,9 @@ class led(_module):
         self.send_led('{:%H:%M}'.format(datetime.now()).center(16))
 
     def send_led(self, message):
-        self.__send_led(action='text', text=message[:85])
+        return self.__send_led(action='text', text=message[:85])
     def send_welcome(self, name):
-        self.__send_led(action='welcome', name=name)
-        pass
+        return self.__send_led(action='welcome', name=name)
     def __send_led(self, **parameters):
         """Send a command to the led board"""
         try:
