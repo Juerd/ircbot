@@ -209,7 +209,7 @@ class tkkrlab( _module ):
 
 	def __random_quote( self ):
 		"""Read a quote from a text file"""
-		self.get_module('quote').random_quote()
+		return self.get_module('quote').random_quote()
 
 	def __on_state_change(self, state):
 		self.__set_default_topic()
