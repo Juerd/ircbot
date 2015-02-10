@@ -144,11 +144,7 @@ class tkkrlab( _module ):
 	def admin_cmd_force_topic_update( self, args, source, target, admin ):
 		"""!force_topic_update: force topic update"""
 		if not admin: return
-		self.__set_default_topic();
-		
-#	def cmd_quote( self, args, source, target, admin ):
-#		"""!quote: to get a random quote"""
-#		return [ 'Quote: ' + self.__random_quote() ]
+		self.__set_default_topic()
 		
 	def cmd_status( self, args, source, target, admin ):
 		"""!status: to get open/close status of the space"""
@@ -213,13 +209,7 @@ class tkkrlab( _module ):
 
 	def __random_quote( self ):
 		"""Read a quote from a text file"""
-		try:
-			with open( self.get_config( 'quote_file' ), 'rt', encoding='utf-8' ) as fd:
-				return random.choice( fd.readlines() )
-		except IOError:
-			return 'Error: quote file not found'
-		except Exception as e:
-			return 'Error: no quote file defined: {}'.format(e)
+		self.get_module('quote').random_quote()
 
 	def __on_state_change(self, state):
 		self.__set_default_topic()
