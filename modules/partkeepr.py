@@ -1,12 +1,12 @@
-from ._module import _module
+from modules import Module
 
 import http.client
 import urllib.parse
 import json
 
-class partkeepr(_module):
-    def cmd_locate(self, args, source, target, admin):
-        parts = self.findpart(' '.join(args))
+class partkeepr(Module):
+    def cmd_locate(self, raw_args, **kwargs):
+        parts = self.findpart(raw_args)
         if parts:
             partstr = ', '.join(['{{name: "{name}", location: "{location}", stock: {stock}}}'.format(**part) for part in parts])
             return ['Part found: ' + partstr]

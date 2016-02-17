@@ -31,7 +31,7 @@ class mpdclient(Module):
         else:
             return 'nothing at all'
     
-    def cmd_np(self, args, source, target, admin):
+    def cmd_np(self, **kwargs):
         try:
             song = self.get_currentsong()
             np = self.parse_currentsong(song)
@@ -43,7 +43,7 @@ class mpdclient(Module):
         except Exception as e:
             return ['Error: {}'.format(e)]
  
-    def cmd_npd(self, args, source, target, admin):
+    def cmd_npd(self, **kwargs):
         try:
             song = self.get_currentsong()
             return [str(song)]

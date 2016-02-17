@@ -5,13 +5,11 @@ import logging
 from datetime import datetime
 
 class led(Module):
-    def cmd_led( self, args, source, target, admin ):
+    def cmd_led(self, raw_args, source, **kwargs):
         """!led <message>: put message on led matrix board"""
-        if source.lower() == 'aaps' or source.lower().startswith('michielbrink'):
-            pass
-        return [ 'Led: {0}'.format( self.send_led( '<' + source + '> ' + ' '.join( args ) ) ) ]
+        return ['Led: {0}'.format(self.send_led('<' + source + '> ' + raw_args))]
 
-    def cmd_time( self, args, source, target, admin ):
+    def cmd_time(self, **kwargs):
         """!time: put current time on led matrix board"""
         self.send_led('{:%H:%M}'.format(datetime.now()).center(16))
 
