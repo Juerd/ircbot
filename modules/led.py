@@ -1,10 +1,10 @@
-from ._module import _module
+from modules import Module
 import urllib
 import http
 import logging
 from datetime import datetime
 
-class led(_module):
+class led(Module):
     def cmd_led( self, args, source, target, admin ):
         """!led <message>: put message on led matrix board"""
         if source.lower() == 'aaps' or source.lower().startswith('michielbrink'):

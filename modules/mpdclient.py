@@ -1,14 +1,11 @@
-from ._module import _module
+from modules import Module
 
 import threading
 import mpd
 import logging
 import time
 
-class mpdclient(_module):
-    def __init__(self, mgr):
-        _module.__init__(self, mgr)
-    
+class mpdclient(Module):
     def get_currentsong(self):
         try:
             host, port = self.get_config('host'), self.get_config('port')

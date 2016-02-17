@@ -1,4 +1,4 @@
-from ._module import _module
+from modules import Module
 
 import http.client, urllib.request, urllib.parse, urllib.error
 
@@ -57,7 +57,7 @@ class StatusMonitor( threading.Thread ):
 		self.socket.close()
 		logging.debug( 'End of run() in StatusMonitor' )
 
-class tkkrlab( _module ):
+class tkkrlab(Module):
 	CFG_KEY_STATE = 'space_state'
 	CFG_KEY_STATE_TIME = 'space_state_time'
 	CFG_KEY_STATE_NICK = 'space.state.nick'
@@ -70,9 +70,7 @@ class tkkrlab( _module ):
 	DEFAULT_TOPIC = 'See our activities on http://bit.ly/AsJMNc'
 
 	"""Bot module to do tkkrlab things"""
-	def __init__( self, mgr ):
-		_module.__init__( self, mgr )
-		
+	def start(self):
 		status_history = self.get_config( 'space_state_history', False )
 		if status_history:
 			self.space_status_history = [ f.split(':') for f in status_history.split( ',' ) ]

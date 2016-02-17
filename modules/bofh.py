@@ -1,8 +1,8 @@
-from ._module import _module
+from modules import Module
 import logging
 import random
 
-class bofh( _module ):
+class bofh(Module):
 	def cmd_bofh( self, args, source, target, admin ):
 		"""!bofh: to get a random BOFH excuse"""
 		return [ self.__random_quote() ]
