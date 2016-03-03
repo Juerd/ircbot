@@ -121,7 +121,7 @@ class tkkrlab(Module):
         except:
             pass
 
-    def admin_cmd_force_status(self, raw_args, admin, **kwargs):
+    def admin_cmd_force_status(self, source, raw_args, admin, **kwargs):
         """!force_status <0|1>: force space status to closed/open"""
         if not admin: return
         if len(raw_args) == 0: return
